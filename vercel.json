@@ -4,13 +4,8 @@
       "source": "/pdfs/(.*)",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Expose-Headers", "value": "Accept-Ranges, Content-Range, Content-Length" },
-        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+        { "key": "Access-Control-Expose-Headers", "value": "Accept-Ranges, Content-Range, Content-Length" }
       ]
-    },
-    {
-      "source": "/covers/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
     }
   ]
 }
