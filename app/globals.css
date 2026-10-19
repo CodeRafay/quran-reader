@@ -1,0 +1,54 @@
+:root {
+  --binding: #103a2d; /* mushaf binding green */
+  --binding-deep: #0a2a20;
+  --gilt: #b8913a; /* the gold of an illuminated frame */
+  --gilt-soft: #d9c08a;
+  --paper: #eef1ec;
+  --card: #f8faf6;
+  --ink: #17221d;
+  --muted: #56655d;
+  --desk: #dfe4dd; /* behind pages in the reader */
+  --font-ui: var(--font-sans), system-ui, sans-serif;
+  --font-ar: var(--font-amiri), "Amiri", "Traditional Arabic", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gilt);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -1,0 +1,125 @@
+.hero {
+  background: var(--binding);
+  color: #f3efe2;
+  text-align: center;
+  padding: 3.5rem 1rem 3rem;
+  border-bottom: 3px double var(--gilt);
+}
+
+.basmala {
+  margin: 0;
+  font-family: var(--font-ar);
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  line-height: 1.6;
+  color: var(--gilt-soft);
+}
+
+.name {
+  margin: 0.75rem 0 0;
+  font-family: var(--font-ar);
+  font-weight: 700;
+  font-size: 1.75rem;
+  letter-spacing: 0.01em;
+}
+
+.lede {
+  margin: 0.25rem auto 0;
+  max-width: 36rem;
+  color: #c9d3cb;
+}
+
+.main {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 4rem;
+}
+
+.shelf + .shelf {
+  margin-top: 3rem;
+}
+
+.shelfTitle {
+  margin: 0;
+  font-family: var(--font-ar);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.intro {
+  margin: 0.25rem 0 0;
+  max-width: 42rem;
+  color: var(--muted);
+}
+
+.grid {
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 1.75rem 1.25rem;
+}
+
+@media (max-width: 30rem) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem 1rem;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  border-radius: 2px;
+}
+
+/* the double gilt rule of an illuminated mushaf page */
+.frame {
+  display: block;
+  padding: 6px;
+  background: var(--card);
+  border: 1px solid var(--gilt);
+  box-shadow: inset 0 0 0 3px var(--card), inset 0 0 0 4px var(--gilt);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.frame img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  object-position: top;
+}
+
+.card:hover .frame,
+.card:focus-visible .frame {
+  border-color: var(--binding);
+  box-shadow: inset 0 0 0 3px var(--card), inset 0 0 0 4px var(--binding);
+}
+
+.titleAr {
+  margin-top: 0.6rem;
+  font-family: var(--font-ar);
+  font-size: 1.3rem;
+  line-height: 1.5;
+}
+
+.title {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.note {
+  margin-top: 0.15rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.resume {
+  margin-top: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--binding);
+}

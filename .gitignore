@@ -1,0 +1,12 @@
+# originals kept out of the repo (processed copies live in public/pdfs)
+/*.pdf
+
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# copied from node_modules on every dev/build
+public/pdf.worker.min.mjs
+public/pdfjs-wasm/

@@ -1,0 +1,23 @@
+{
+  "name": "quran-reader",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/copy-pdfjs.js",
+    "dev": "next dev",
+    "prebuild": "node scripts/copy-pdfjs.js && node scripts/check-books.ts",
+    "build": "next build",
+    "start": "npx serve out"
+  },
+  "dependencies": {
+    "next": "^16.4.2",
+    "pdfjs-dist": "^6.4.299",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}
