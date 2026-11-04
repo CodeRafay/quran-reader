@@ -133,6 +133,29 @@ export default function Reader({ book }: { book: Book }) {
     return () => ro.disconnect();
   }, [fit]);
 
+  // Keep the screen awake while reading. The browser drops the lock whenever the tab is hidden, so take it again on return.
+  useEffect(() => {
+    let lock: WakeLockSentinel | undefined;
+    let done = false;
+    const request = () => {
+      if (document.visibilityState !== "visible") return;
+      navigator.wakeLock
+        ?.request("screen")
+        .then((l) => {
+          if (done) l.release();
+          else lock = l;
+        })
+        .catch(() => {}); // unsupported, low battery, or not https: the screen just dims as before
+    };
+    request();
+    document.addEventListener("visibilitychange", request);
+    return () => {
+      done = true;
+      document.removeEventListener("visibilitychange", request);
+      lock?.release();
+    };
+  }, []);
+
   useEffect(() => {
     if (!contentsOpen) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setContentsOpen(false);
