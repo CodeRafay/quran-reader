@@ -163,6 +163,33 @@ export default function Reader({ book }: { book: Book }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [contentsOpen]);
 
+  // Right-to-left books: ← and PageDown go forward, → and PageUp go back. ↑/↓ keep scrolling.
+  useEffect(() => {
+    if (contentsOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      const viewer = viewerRef.current;
+      if (!viewer || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if ((e.target as HTMLElement).closest("input, textarea, select")) return;
+      if (e.key === "ArrowLeft" || e.key === "PageDown") viewer.nextPage();
+      else if (e.key === "ArrowRight" || e.key === "PageUp") viewer.previousPage();
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [contentsOpen]);
+
+  // Tap the left quarter to go forward, the right quarter to go back (right-to-left).
+  const onPagesClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const viewer = viewerRef.current;
+    if (!viewer || (e.target as HTMLElement).closest("a, .linkAnnotation")) return;
+    if (getSelection()?.toString()) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    if (x < 0.25) viewer.nextPage();
+    else if (x > 0.75) viewer.previousPage();
+  };
+
   const goTo = (n: number) => {
     const viewer = viewerRef.current;
     if (viewer && Number.isInteger(n) && n >= 1 && n <= viewer.pagesCount) viewer.currentPageNumber = n;
@@ -244,7 +271,7 @@ export default function Reader({ book }: { book: Book }) {
         </button>
       </header>
 
-      <div ref={containerRef} className={s.pages} tabIndex={0} aria-label={`${book.title} pages`}>
+      <div ref={containerRef} className={s.pages} tabIndex={0} onClick={onPagesClick} aria-label={`${book.title} pages`}>
         <div className="pdfViewer" />
       </div>
 
