@@ -15,3 +15,19 @@ export function savePage(id: string, page: number) {
     localStorage.setItem(key(id), String(page));
   } catch {}
 }
+
+// Night mode, one setting for every book. null = never chosen.
+export function savedNight(): boolean | null {
+  try {
+    const v = localStorage.getItem("night");
+    return v === null ? null : v === "1";
+  } catch {
+    return null;
+  }
+}
+
+export function saveNight(on: boolean) {
+  try {
+    localStorage.setItem("night", on ? "1" : "0");
+  } catch {}
+}

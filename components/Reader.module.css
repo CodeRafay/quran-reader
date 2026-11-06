@@ -120,6 +120,15 @@
   box-shadow: 0 1px 3px rgba(23, 34, 29, 0.18);
 }
 
+/* on .page, not .pdfViewer, so the desk behind the pages isn't inverted */
+.night :global(.pdfViewer .page) {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+.night.keepHue :global(.pdfViewer .page) {
+  filter: url(#night-keep-hue);
+}
+
 .status {
   position: absolute;
   inset: var(--bar-h) 0 auto;

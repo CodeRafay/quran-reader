@@ -6,7 +6,7 @@ import type { PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 import type { PDFViewer } from "pdfjs-dist/web/pdf_viewer.mjs";
 import "pdfjs-dist/web/pdf_viewer.css";
 import type { Book, TocEntry } from "../lib/books";
-import { savePage, savedPage } from "../lib/progress";
+import { saveNight, savePage, savedNight, savedPage } from "../lib/progress";
 import s from "./Reader.module.css";
 
 const MAX_PAGE_WIDTH = 960; // CSS px: past this a page is too tall to read comfortably
@@ -47,6 +47,12 @@ export default function Reader({ book }: { book: Book }) {
   const [contentsOpen, setContentsOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [night, setNight] = useState(false);
+
+  // Read after mount: the server render can't see storage or the system theme.
+  useEffect(() => {
+    setNight(savedNight() ?? matchMedia("(prefers-color-scheme: dark)").matches);
+  }, []);
 
   const fit = useCallback(() => {
     const viewer = viewerRef.current;
@@ -261,6 +267,25 @@ export default function Reader({ book }: { book: Book }) {
         </div>
         <button
           type="button"
+          onClick={() => {
+            setNight(!night);
+            saveNight(!night);
+          }}
+          aria-label="Night mode"
+          aria-pressed={night}
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path
+              d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"
+              fill={night ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
           className={s.contentsBtn}
           onClick={() => setContentsOpen((o) => !o)}
           aria-expanded={contentsOpen}
@@ -271,9 +296,50 @@ export default function Reader({ book }: { book: Book }) {
         </button>
       </header>
 
-      <div ref={containerRef} className={s.pages} tabIndex={0} onClick={onPagesClick} aria-label={`${book.title} pages`}>
+      <div
+        ref={containerRef}
+        className={[s.pages, night && s.night, book.colourCoded && s.keepHue].filter(Boolean).join(" ")}
+        tabIndex={0}
+        onClick={onPagesClick}
+        aria-label={`${book.title} pages`}
+      >
         <div className="pdfViewer" />
       </div>
+
+      {book.colourCoded && (
+        // Night mode that flips lightness only, so tajweed colours keep their hue and saturation:
+        // each channel c becomes c + 1 − max(r,g,b) − min(r,g,b). Built from additions only, so nothing clamps and alpha stays 1.
+        <svg width="0" height="0" aria-hidden="true" style={{ position: "absolute" }}>
+          <filter id="night-keep-hue" colorInterpolationFilters="sRGB">
+            <feColorMatrix in="SourceGraphic" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 1 0" result="r" />
+            <feColorMatrix in="SourceGraphic" values="0 1 0 0 0  0 1 0 0 0  0 1 0 0 0  0 0 0 1 0" result="g" />
+            <feColorMatrix in="SourceGraphic" values="0 0 1 0 0  0 0 1 0 0  0 0 1 0 0  0 0 0 1 0" result="b" />
+            <feBlend in="r" in2="g" mode="lighten" result="rgMax" />
+            <feBlend in="rgMax" in2="b" mode="lighten" result="max" />
+            <feBlend in="r" in2="g" mode="darken" result="rgMin" />
+            <feBlend in="rgMin" in2="b" mode="darken" result="min" />
+            <feComponentTransfer in="max" result="invMax">
+              <feFuncR type="linear" slope="-1" intercept="1" />
+              <feFuncG type="linear" slope="-1" intercept="1" />
+              <feFuncB type="linear" slope="-1" intercept="1" />
+            </feComponentTransfer>
+            {/* A = c + 1 − max */}
+            <feComposite in="SourceGraphic" in2="invMax" operator="arithmetic" k2="1" k3="1" result="a" />
+            <feComponentTransfer in="a" result="invA">
+              <feFuncR type="linear" slope="-1" intercept="1" />
+              <feFuncG type="linear" slope="-1" intercept="1" />
+              <feFuncB type="linear" slope="-1" intercept="1" />
+            </feComponentTransfer>
+            {/* B = (1 − A) + min, then 1 − B = c + 1 − max − min */}
+            <feComposite in="invA" in2="min" operator="arithmetic" k2="1" k3="1" result="bSum" />
+            <feComponentTransfer in="bSum">
+              <feFuncR type="linear" slope="-1" intercept="1" />
+              <feFuncG type="linear" slope="-1" intercept="1" />
+              <feFuncB type="linear" slope="-1" intercept="1" />
+            </feComponentTransfer>
+          </filter>
+        </svg>
+      )}
 
       {status !== "ready" && (
         <div className={s.status} role="status">

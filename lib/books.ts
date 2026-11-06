@@ -10,6 +10,7 @@ export type Book = {
   cover: string;
   pages: number;
   toc?: TocEntry[]; // only for books whose PDF has no bookmarks
+  colourCoded?: boolean; // colours carry meaning: night mode must keep their hue
 };
 
 // [name, start page in the printed tafseer] from its surah index (book pp. 1762–1765)
@@ -81,6 +82,7 @@ export const BOOKS: Book[] = [
     file: "/pdfs/13-line-tajweed.pdf",
     cover: "/covers/13-line-tajweed.webp",
     pages: 850,
+    colourCoded: true,
   },
   ...tafseer,
 ];
