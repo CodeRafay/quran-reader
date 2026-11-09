@@ -119,7 +119,8 @@ export default function Reader({ book }: { book: Book }) {
       pageWidthRef.current = Math.max(...widths);
       viewer.setDocument(doc);
       linkService.setDocument(doc);
-      if (!book.toc) outlineToToc(doc).then((t) => !cancelled && setToc(t));
+      // book.juz replaces the PDF's own Arabic juz bookmarks
+      if (!book.toc) outlineToToc(doc).then((t) => !cancelled && setToc(t.filter((e) => !e.title.startsWith("الجزء"))));
     })().catch((err) => {
       if (cancelled) return;
       console.error(err);
@@ -215,10 +216,14 @@ export default function Reader({ book }: { book: Book }) {
   };
 
   const current = useMemo(() => toc.findLast((e) => e.page <= page), [toc, page]);
+  const currentJuz = useMemo(() => book.juz?.findLast((e) => e.page <= page), [book, page]);
+  // stable sort: a juz row stays above a surah starting on the same page
+  const entries = useMemo(() => [...(book.juz ?? []), ...toc].sort((a, b) => a.page - b.page), [book, toc]);
   const shown = useMemo(() => {
-    const q = filter.trim().toLowerCase();
-    return q ? toc.filter((e) => e.title.toLowerCase().includes(q)) : toc;
-  }, [toc, filter]);
+    const norm = (t: string) => t.toLowerCase().replace(/\bpara\b/g, "juz"); // "para" and "juz" are the same thing
+    const q = norm(filter.trim());
+    return q ? entries.filter((e) => norm(e.title).includes(q)) : entries;
+  }, [entries, filter]);
 
   return (
     <div className={s.reader}>
@@ -232,7 +237,9 @@ export default function Reader({ book }: { book: Book }) {
           <span className={s.bookTitle}>
             {book.group === "tafseer" ? `Tafseer, ${book.title}` : book.title}
           </span>
-          {current && <span className={s.section}>{current.title}</span>}
+          {(current || currentJuz) && (
+            <span className={s.section}>{[current?.title, currentJuz?.title].filter(Boolean).join(" · ")}</span>
+          )}
         </div>
         <form
           className={s.pager}
@@ -290,7 +297,7 @@ export default function Reader({ book }: { book: Book }) {
           onClick={() => setContentsOpen((o) => !o)}
           aria-expanded={contentsOpen}
           aria-controls="contents"
-          disabled={!toc.length}
+          disabled={!entries.length}
         >
           Contents
         </button>
@@ -362,7 +369,7 @@ export default function Reader({ book }: { book: Book }) {
           <input
             className={s.filter}
             type="search"
-            placeholder={book.group === "quran" || book.toc ? "Find a surah" : "Find a section"}
+            placeholder={book.juz ? "Find a surah or juz" : book.toc ? "Find a surah" : "Find a section"}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             aria-label="Find in contents"
@@ -376,7 +383,7 @@ export default function Reader({ book }: { book: Book }) {
             <li key={`${e.page}-${e.title}`}>
               <button
                 type="button"
-                aria-current={e === current ? "true" : undefined}
+                aria-current={e === current || e === currentJuz ? "true" : undefined}
                 onClick={() => {
                   goTo(e.page);
                   setContentsOpen(false);

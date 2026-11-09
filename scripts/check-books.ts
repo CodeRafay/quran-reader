@@ -7,6 +7,11 @@ assert.equal(new Set(BOOKS.map((b) => b.id)).size, BOOKS.length, "duplicate book
 for (const b of BOOKS) {
   assert.ok(existsSync(`public${b.file}`), `missing ${b.file}`);
   assert.ok(existsSync(`public${b.cover}`), `missing ${b.cover}`);
+  if (b.juz) {
+    assert.equal(b.juz.length, 30, `${b.id}: not 30 juz`);
+    for (let i = 1; i < 30; i++) assert.ok(b.juz[i].page > b.juz[i - 1].page, `${b.id}: juz pages not increasing`);
+    assert.ok(b.juz[29].page <= b.pages, `${b.id}: juz past the last page`);
+  }
   if (!b.toc) continue;
   // each manzil starts on a fresh surah page; manzil 1 also carries the 22 front-matter pages
   const first = b.id === "tafseer-manzil-1" ? 23 : 1;

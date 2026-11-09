@@ -10,6 +10,7 @@ export type Book = {
   cover: string;
   pages: number;
   toc?: TocEntry[]; // only for books whose PDF has no bookmarks
+  juz?: TocEntry[]; // start of each juz (para), merged into the contents list
   colourCoded?: boolean; // colours carry meaning: night mode must keep their hue
 };
 
@@ -62,6 +63,9 @@ const tafseer: Book[] = MANZILS.map(([from, to, start, pages], i) => ({
   })),
 }));
 
+const juz = (label: string, pages: number[]): TocEntry[] =>
+  pages.map((page, i) => ({ title: `${label} ${i + 1}`, page }));
+
 export const BOOKS: Book[] = [
   {
     id: "digital-quran",
@@ -72,6 +76,10 @@ export const BOOKS: Book[] = [
     file: "/pdfs/digital-quran.pdf",
     cover: "/covers/digital-quran.webp",
     pages: 620,
+    juz: juz("Juz", [
+      2, 22, 42, 62, 82, 102, 121, 142, 162, 182, 201, 222, 242, 262, 282,
+      302, 322, 342, 362, 382, 402, 422, 442, 462, 482, 502, 522, 542, 562, 582,
+    ]),
   },
   {
     id: "13-line-tajweed",
@@ -82,6 +90,11 @@ export const BOOKS: Book[] = [
     file: "/pdfs/13-line-tajweed.pdf",
     cover: "/covers/13-line-tajweed.webp",
     pages: 850,
+    // read off each page's para header; every para starts at the top of a page
+    juz: juz("Para", [
+      4, 31, 59, 87, 115, 143, 171, 199, 227, 255, 283, 311, 339, 367, 395,
+      423, 451, 479, 507, 535, 561, 589, 615, 643, 669, 699, 729, 759, 789, 821,
+    ]),
     colourCoded: true,
   },
   ...tafseer,
