@@ -101,3 +101,18 @@ export const BOOKS: Book[] = [
 ];
 
 export const getBook = (id: string) => BOOKS.find((b) => b.id === id);
+
+export const SURAH_LINKS = tafseer.flatMap((b) =>
+  b.toc!.map((t) => ({ title: t.title, manzil: b.title, href: `/read/${b.id}?page=${t.page}` })),
+);
+
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+// shortcut: matches only the one spelling in SURAHS ("yaseen" misses, the number always works), add aliases if readers ask.
+export function findSurahs(query: string) {
+  const q = norm(query);
+  if (!q) return [];
+  return /^\d+$/.test(q)
+    ? SURAH_LINKS.slice(Number(q) - 1, Number(q)) // a number means that surah, not every title containing the digits
+    : SURAH_LINKS.filter((s) => norm(s.title).includes(q));
+}

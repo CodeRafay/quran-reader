@@ -1,15 +1,30 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { BOOKS, type Book } from "../lib/books";
 import Resume from "../components/Resume";
+import SurahSearch from "../components/SurahSearch";
 import s from "./page.module.css";
 
-function Shelf({ id, title, intro, books }: { id: string; title: string; intro?: string; books: Book[] }) {
+function Shelf({
+  id,
+  title,
+  intro,
+  books,
+  children,
+}: {
+  id: string;
+  title: string;
+  intro?: string;
+  books: Book[];
+  children?: ReactNode;
+}) {
   return (
     <section className={s.shelf} aria-labelledby={id}>
       <h2 id={id} className={s.shelfTitle}>
         {title}
       </h2>
       {intro && <p className={s.intro}>{intro}</p>}
+      {children}
       <ul className={s.grid}>
         {books.map((b) => (
           <li key={b.id}>
@@ -48,7 +63,9 @@ export default function Library() {
           title="Tafseer in Urdu"
           intro="Urdu translation by Maulana Muhammad Junagarhi with tafseer notes by Maulana Salahuddin Yusuf, printed by the King Fahd Complex. Divided into the seven manzils."
           books={BOOKS.filter((b) => b.group === "tafseer")}
-        />
+        >
+          <SurahSearch />
+        </Shelf>
       </main>
     </>
   );
