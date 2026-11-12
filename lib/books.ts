@@ -12,7 +12,10 @@ export type Book = {
   toc?: TocEntry[]; // only for books whose PDF has no bookmarks
   juz?: TocEntry[]; // start of each juz (para), merged into the contents list
   colourCoded?: boolean; // colours carry meaning: night mode must keep their hue
+  special?: Special[]; // surahs hadith single out, pinned in the contents list
 };
+
+export type Special = TocEntry & { note: string };
 
 // [name, start page in the printed tafseer] from its surah index (book pp. 1762–1765)
 const SURAHS: [string, number][] = [
@@ -42,26 +45,50 @@ const SURAHS: [string, number][] = [
 ];
 const BOOK_TO_PDF = 22; // printed page 1 is PDF page 23 of the full tafseer
 
+// [surah, when it is read, Digital Quran page, 13-line page], pages read from each PDF's own bookmarks.
+// Digital Quran page 2 holds both Al-Fatiha and the opening of Al-Baqarah.
+// Only surahs with a sahih or hasan narration on their virtue; weak-chain ones (Ya-Sin, Ad-Dukhan, Ar-Rahman, Al-Waqi'ah) left out on purpose.
+const SPECIAL: [number, string, number, number][] = [
+  [1, "In every prayer", 2, 4],
+  [2, "Keeps Shaytan from the home", 2, 5],
+  [18, "Friday", 293, 410],
+  [32, "Before sleep", 415, 579],
+  [67, "Before sleep, protects in the grave", 562, 789],
+  [112, "A third of the Quran", 604, 849],
+  [113, "Morning, evening, before sleep", 604, 849],
+  [114, "Morning, evening, before sleep", 604, 850],
+];
+const special = (col: 2 | 3): Special[] =>
+  SPECIAL.map((r) => ({ title: SURAHS[r[0] - 1][0], note: r[1], page: r[col] }));
+
 // [first surah, last surah, first PDF page of the full tafseer, pages in this manzil]
 const MANZILS: [number, number, number, number][] = [
   [1, 4, 1, 291], [5, 9, 292, 268], [10, 16, 560, 206], [17, 25, 766, 248],
   [26, 36, 1014, 239], [37, 49, 1253, 215], [50, 114, 1468, 325],
 ];
 
-const tafseer: Book[] = MANZILS.map(([from, to, start, pages], i) => ({
-  id: `tafseer-manzil-${i + 1}`,
-  title: `Manzil ${i + 1}`,
-  titleAr: `منزل ${i + 1}`,
-  note: `${SURAHS[from - 1][0]} to ${SURAHS[to - 1][0]}`,
-  group: "tafseer",
-  file: `/pdfs/tafseer-manzil-${i + 1}.pdf`,
-  cover: `/covers/tafseer-manzil-${i + 1}.webp`,
-  pages,
-  toc: SURAHS.slice(from - 1, to).map(([name, bookPage], j) => ({
+const tafseer: Book[] = MANZILS.map(([from, to, start, pages], i) => {
+  const toc = SURAHS.slice(from - 1, to).map(([name, bookPage], j) => ({
     title: `${from + j}. ${name}`,
     page: bookPage + BOOK_TO_PDF - start + 1,
-  })),
-}));
+  }));
+  return {
+    id: `tafseer-manzil-${i + 1}`,
+    title: `Manzil ${i + 1}`,
+    titleAr: `منزل ${i + 1}`,
+    note: `${SURAHS[from - 1][0]} to ${SURAHS[to - 1][0]}`,
+    group: "tafseer",
+    file: `/pdfs/tafseer-manzil-${i + 1}.pdf`,
+    cover: `/covers/tafseer-manzil-${i + 1}.webp`,
+    pages,
+    toc,
+    special: SPECIAL.filter(([n]) => n >= from && n <= to).map(([n, note]) => ({
+      title: SURAHS[n - 1][0],
+      note,
+      page: toc[n - from].page,
+    })),
+  };
+});
 
 const juz = (label: string, pages: number[]): TocEntry[] =>
   pages.map((page, i) => ({ title: `${label} ${i + 1}`, page }));
@@ -80,6 +107,7 @@ export const BOOKS: Book[] = [
       2, 22, 42, 62, 82, 102, 121, 142, 162, 182, 201, 222, 242, 262, 282,
       302, 322, 342, 362, 382, 402, 422, 442, 462, 482, 502, 522, 542, 562, 582,
     ]),
+    special: special(2),
   },
   {
     id: "13-line-tajweed",
@@ -96,6 +124,7 @@ export const BOOKS: Book[] = [
       423, 451, 479, 507, 535, 561, 589, 615, 643, 669, 699, 729, 759, 789, 821,
     ]),
     colourCoded: true,
+    special: special(3),
   },
   ...tafseer,
 ];
@@ -105,6 +134,8 @@ export const getBook = (id: string) => BOOKS.find((b) => b.id === id);
 export const SURAH_LINKS = tafseer.flatMap((b) =>
   b.toc!.map((t) => ({ title: t.title, manzil: b.title, href: `/read/${b.id}?page=${t.page}` })),
 );
+
+export const SPECIAL_LINKS = special(2).map((s) => ({ ...s, href: `/read/digital-quran?page=${s.page}` }));
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 

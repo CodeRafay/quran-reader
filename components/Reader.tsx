@@ -6,7 +6,7 @@ import type { PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 import type { PDFViewer } from "pdfjs-dist/web/pdf_viewer.mjs";
 import "pdfjs-dist/web/pdf_viewer.css";
 import type { Book, TocEntry } from "../lib/books";
-import { saveNight, savePage, savedNight, savedPage } from "../lib/progress";
+import { saveBookmarks, saveNight, savePage, savedBookmarks, savedNight, savedPage } from "../lib/progress";
 import s from "./Reader.module.css";
 
 const MAX_PAGE_WIDTH = 960; // CSS px: past this a page is too tall to read comfortably
@@ -48,11 +48,13 @@ export default function Reader({ book }: { book: Book }) {
   const [filter, setFilter] = useState("");
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [night, setNight] = useState(false);
+  const [bookmarks, setBookmarks] = useState<TocEntry[]>([]);
 
   // Read after mount: the server render can't see storage or the system theme.
   useEffect(() => {
     setNight(savedNight() ?? matchMedia("(prefers-color-scheme: dark)").matches);
-  }, []);
+    setBookmarks(savedBookmarks(book.id, book.pages));
+  }, [book]);
 
   const fit = useCallback(() => {
     const viewer = viewerRef.current;
@@ -225,6 +227,23 @@ export default function Reader({ book }: { book: Book }) {
     return q ? entries.filter((e) => norm(e.title).includes(q)) : entries;
   }, [entries, filter]);
 
+  const updateBookmarks = (list: TocEntry[]) => {
+    setBookmarks(list);
+    saveBookmarks(book.id, list);
+  };
+  const marked = bookmarks.some((b) => b.page === page);
+  const toggleBookmark = () => {
+    if (marked) return updateBookmarks(bookmarks.filter((b) => b.page !== page));
+    const fallback = current?.title ?? `Page ${page}`;
+    const name = prompt("Name this bookmark", fallback);
+    if (name === null) return; // cancelled
+    updateBookmarks([...bookmarks, { title: name.trim() || fallback, page }].sort((a, b) => a.page - b.page));
+  };
+  const jump = (n: number) => {
+    goTo(n);
+    setContentsOpen(false);
+  };
+
   return (
     <div className={s.reader}>
       <header className={s.bar}>
@@ -291,15 +310,31 @@ export default function Reader({ book }: { book: Book }) {
             />
           </svg>
         </button>
+        <button type="button" onClick={toggleBookmark} aria-label="Bookmark this page" aria-pressed={marked}>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path
+              d="M6 3h12v18l-6-5-6 5z"
+              fill={marked ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
         <button
           type="button"
           className={s.contentsBtn}
           onClick={() => setContentsOpen((o) => !o)}
           aria-expanded={contentsOpen}
           aria-controls="contents"
-          disabled={!entries.length}
+          disabled={!entries.length && !bookmarks.length && !book.special?.length}
+          aria-label="Contents"
         >
-          Contents
+          <span className={s.contentsLabel}>Contents</span>
+          {/* phones: an icon, so the surah name keeps room in the bar */}
+          <svg className={s.contentsIcon} viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
         </button>
       </header>
 
@@ -378,24 +413,65 @@ export default function Reader({ book }: { book: Book }) {
             Close
           </button>
         </div>
-        <ol className={s.tocList}>
-          {shown.map((e) => (
-            <li key={`${e.page}-${e.title}`}>
-              <button
-                type="button"
-                aria-current={e === current || e === currentJuz ? "true" : undefined}
-                onClick={() => {
-                  goTo(e.page);
-                  setContentsOpen(false);
-                }}
-              >
-                <span dir="auto">{e.title}</span>
-                <span className={s.tocPage}>{e.page}</span>
-              </button>
-            </li>
-          ))}
-          {!shown.length && <li className={s.empty}>Nothing matches “{filter}”.</li>}
-        </ol>
+        <div className={s.contentsBody}>
+          {!filter && bookmarks.length > 0 && (
+            <>
+              <h2 className={s.group}>Bookmarks</h2>
+              <ul className={s.tocList}>
+                {bookmarks.map((b) => (
+                  <li key={b.page} className={s.bookmark}>
+                    <button type="button" onClick={() => jump(b.page)}>
+                      <span dir="auto">{b.title}</span>
+                      <span className={s.tocPage}>{b.page}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={s.remove}
+                      onClick={() => updateBookmarks(bookmarks.filter((x) => x !== b))}
+                      aria-label={`Remove bookmark ${b.title}`}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {!filter && !!book.special?.length && (
+            <>
+              <h2 className={s.group}>Read often</h2>
+              <ul className={s.tocList}>
+                {book.special.map((e) => (
+                  <li key={e.title}>
+                    <button type="button" onClick={() => jump(e.page)}>
+                      <span>
+                        {e.title}
+                        <span className={s.note}>{e.note}</span>
+                      </span>
+                      <span className={s.tocPage}>{e.page}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {entries.length > 0 && <h2 className={s.group}>All</h2>}
+            </>
+          )}
+          <ol className={s.tocList}>
+            {shown.map((e) => (
+              <li key={`${e.page}-${e.title}`}>
+                <button
+                  type="button"
+                  aria-current={e === current || e === currentJuz ? "true" : undefined}
+                  onClick={() => jump(e.page)}
+                >
+                  <span dir="auto">{e.title}</span>
+                  <span className={s.tocPage}>{e.page}</span>
+                </button>
+              </li>
+            ))}
+            {!shown.length && filter && <li className={s.empty}>Nothing matches “{filter}”.</li>}
+          </ol>
+        </div>
       </aside>
     </div>
   );

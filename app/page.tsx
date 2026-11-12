@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { BOOKS, type Book } from "../lib/books";
+import { BOOKS, SPECIAL_LINKS, type Book } from "../lib/books";
 import Resume from "../components/Resume";
 import SurahSearch from "../components/SurahSearch";
 import s from "./page.module.css";
@@ -57,6 +57,21 @@ export default function Library() {
         <p className={s.lede}>Read the Quran and its Urdu tafseer page by page, on any device.</p>
       </header>
       <main className={s.main}>
+        <section className={s.shelf} aria-labelledby="special">
+          <h2 id="special" className={s.shelfTitle}>
+            Surahs to read often
+          </h2>
+          <ul className={s.special}>
+            {SPECIAL_LINKS.map((l) => (
+              <li key={l.href + l.title}>
+                <Link href={l.href} className={s.chip}>
+                  <span className={s.title}>{l.title}</span>
+                  <span className={s.note}>{l.note}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
         <Shelf id="quran" title="Quran" books={BOOKS.filter((b) => b.group === "quran")} />
         <Shelf
           id="tafseer"

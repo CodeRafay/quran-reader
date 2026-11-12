@@ -1,3 +1,5 @@
+import type { TocEntry } from "./books";
+
 // Last page read per book, kept in this browser only.
 const key = (id: string) => `page:${id}`;
 
@@ -29,5 +31,25 @@ export function savedNight(): boolean | null {
 export function saveNight(on: boolean) {
   try {
     localStorage.setItem("night", on ? "1" : "0");
+  } catch {}
+}
+
+// Named bookmarks per book, sorted by page. Stored data is checked: it may be stale or hand-edited.
+const bmKey = (id: string) => `bookmarks:${id}`;
+
+export function savedBookmarks(id: string, pages: number): TocEntry[] {
+  try {
+    const list: unknown = JSON.parse(localStorage.getItem(bmKey(id)) ?? "[]");
+    return Array.isArray(list)
+      ? list.filter((b) => typeof b?.title === "string" && Number.isInteger(b.page) && b.page >= 1 && b.page <= pages)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveBookmarks(id: string, list: TocEntry[]) {
+  try {
+    localStorage.setItem(bmKey(id), JSON.stringify(list));
   } catch {}
 }

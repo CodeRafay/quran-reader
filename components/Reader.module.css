@@ -102,6 +102,10 @@
   font-weight: 600;
 }
 
+.contentsIcon {
+  display: none;
+}
+
 .pages {
   position: absolute; /* pdf.js viewer requires an absolutely positioned container */
   inset: calc(var(--bar-h) + env(safe-area-inset-top, 0px)) 0 0;
@@ -193,11 +197,42 @@
   background: #fff;
 }
 
+.contentsBody {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+.group {
+  margin: 0.75rem 1rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .tocList {
   list-style: none;
   margin: 0;
-  padding: 0.25rem 0 calc(1rem + env(safe-area-inset-bottom, 0px));
-  overflow-y: auto;
+  padding: 0.25rem 0;
+}
+
+.bookmark {
+  display: flex;
+}
+
+.tocList .remove {
+  width: auto;
+  padding: 0 1rem;
+  color: var(--muted);
+  font-size: 1.25rem;
+}
+
+.note {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--muted);
 }
 
 .tocList button {
@@ -247,5 +282,11 @@
   }
   .total {
     display: none;
+  }
+  .contentsLabel {
+    display: none;
+  }
+  .contentsIcon {
+    display: block;
   }
 }
