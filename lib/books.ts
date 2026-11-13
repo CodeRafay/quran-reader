@@ -13,6 +13,7 @@ export type Book = {
   juz?: TocEntry[]; // start of each juz (para), merged into the contents list
   colourCoded?: boolean; // colours carry meaning: night mode must keep their hue
   special?: Special[]; // surahs hadith single out, pinned in the contents list
+  evenOnRight?: boolean; // two-page view pairs (2,3), (4,5)… instead of (1,2), (3,4)…
 };
 
 export type Special = TocEntry & { note: string };
@@ -81,6 +82,8 @@ const tafseer: Book[] = MANZILS.map(([from, to, start, pages], i) => {
     file: `/pdfs/tafseer-manzil-${i + 1}.pdf`,
     cover: `/covers/tafseer-manzil-${i + 1}.webp`,
     pages,
+    // printed odd pages sit on the right; a manzil cut at an even PDF page shifts them to even
+    evenOnRight: start % 2 === 0,
     toc,
     special: SPECIAL.filter(([n]) => n >= from && n <= to).map(([n, note]) => ({
       title: SURAHS[n - 1][0],
@@ -124,6 +127,7 @@ export const BOOKS: Book[] = [
       423, 451, 479, 507, 535, 561, 589, 615, 643, 669, 699, 729, 759, 789, 821,
     ]),
     colourCoded: true,
+    evenOnRight: true, // Al-Fatiha (p. 4) faces the opening of Al-Baqarah (p. 5)
     special: special(3),
   },
   ...tafseer,

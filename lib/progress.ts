@@ -34,6 +34,22 @@ export function saveNight(on: boolean) {
   } catch {}
 }
 
+// One page at a time vs continuous scroll, one setting for every book. null = never chosen.
+export function savedSingle(): boolean | null {
+  try {
+    const v = localStorage.getItem("single");
+    return v === null ? null : v === "1";
+  } catch {
+    return null;
+  }
+}
+
+export function saveSingle(on: boolean) {
+  try {
+    localStorage.setItem("single", on ? "1" : "0");
+  } catch {}
+}
+
 // Named bookmarks per book, sorted by page. Stored data is checked: it may be stale or hand-edited.
 const bmKey = (id: string) => `bookmarks:${id}`;
 

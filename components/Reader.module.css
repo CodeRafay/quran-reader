@@ -124,6 +124,64 @@
   box-shadow: 0 1px 3px rgba(23, 34, 29, 0.18);
 }
 
+/* one page at a time: page-fit measures the container, so the home-bar gap goes on it, not in the padding */
+.single {
+  bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.single :global(.pdfViewer) {
+  display: flex;
+  min-height: 100%;
+  padding: 0;
+}
+
+/* margin:auto centres the page but, unlike align-items, never pushes a zoomed page's top out of reach */
+.single :global(.pdfViewer .page) {
+  margin: auto;
+}
+
+/* Part B trial: open-mushaf spread and page-turn slide */
+.single :global(.pdfViewer .spread) {
+  margin: auto;
+  direction: rtl; /* lower page on the right */
+}
+
+.single :global(.pdfViewer.removePageBorders .spread .page) {
+  margin: 0; /* page-fit leaves no room for pdf.js's 5px spread gutters */
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* pdf.js re-inserts the page on every turn, which restarts the animation; forward comes in from the left (right-to-left book) */
+  .single[data-turn="fwd"] :global(:is(.spread, .pdfViewer > .page)) {
+    animation: turnFwd 180ms ease-out;
+  }
+  .single[data-turn="back"] :global(:is(.spread, .pdfViewer > .page)) {
+    animation: turnBack 180ms ease-out;
+  }
+}
+
+@keyframes turnFwd {
+  from {
+    opacity: 0;
+    transform: translateX(-6%);
+  }
+}
+
+@keyframes turnBack {
+  from {
+    opacity: 0;
+    transform: translateX(6%);
+  }
+}
+
+.night {
+  background: var(--binding-deep);
+}
+
+.night ~ .status {
+  color: var(--gilt-soft); /* --muted is unreadable on the dark desk */
+}
+
 /* on .page, not .pdfViewer, so the desk behind the pages isn't inverted */
 .night :global(.pdfViewer .page) {
   filter: invert(1) hue-rotate(180deg);

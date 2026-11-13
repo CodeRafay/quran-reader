@@ -6,11 +6,26 @@ import type { PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist";
 import type { PDFViewer } from "pdfjs-dist/web/pdf_viewer.mjs";
 import "pdfjs-dist/web/pdf_viewer.css";
 import type { Book, TocEntry } from "../lib/books";
-import { saveBookmarks, saveNight, savePage, savedBookmarks, savedNight, savedPage } from "../lib/progress";
+import {
+  saveBookmarks,
+  saveNight,
+  savePage,
+  saveSingle,
+  savedBookmarks,
+  savedNight,
+  savedPage,
+  savedSingle,
+} from "../lib/progress";
 import s from "./Reader.module.css";
 
 const MAX_PAGE_WIDTH = 960; // CSS px: past this a page is too tall to read comfortably
 const PDF_TO_CSS = 96 / 72;
+const SCROLL = 0, ONE_PAGE = 3; // pdf.js ScrollMode.VERTICAL / .PAGE
+
+// Touch devices turn pages like a mushaf, desktops scroll; a saved choice wins.
+const wantSingle = () => savedSingle() ?? matchMedia("(pointer: coarse)").matches;
+// Part B trial: two pages side by side on a landscape touch screen, like an open mushaf.
+const SPREAD = "(pointer: coarse) and (orientation: landscape) and (min-width: 48rem)";
 
 function startPage(book: Book) {
   const q = Number(new URLSearchParams(location.search).get("page"));
@@ -49,10 +64,13 @@ export default function Reader({ book }: { book: Book }) {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [night, setNight] = useState(false);
   const [bookmarks, setBookmarks] = useState<TocEntry[]>([]);
+  const [single, setSingle] = useState(false);
+  const swipeRef = useRef<{ x: number; y: number } | null>(null);
 
   // Read after mount: the server render can't see storage or the system theme.
   useEffect(() => {
     setNight(savedNight() ?? matchMedia("(prefers-color-scheme: dark)").matches);
+    setSingle(wantSingle());
     setBookmarks(savedBookmarks(book.id, book.pages));
   }, [book]);
 
@@ -60,9 +78,15 @@ export default function Reader({ book }: { book: Book }) {
     const viewer = viewerRef.current;
     const container = containerRef.current;
     if (!viewer || !container || !pageWidthRef.current) return;
+    // Part B trial. pdf.js SpreadMode: 0 none, 1 = (1,2)(3,4)…, 2 = (1)(2,3)(4,5)…
+    viewer.spreadMode = viewer.scrollMode === ONE_PAGE && matchMedia(SPREAD).matches ? (book.evenOnRight ? 2 : 1) : 0;
+    if (viewer.scrollMode === ONE_PAGE) {
+      viewer.currentScaleValue = "page-fit";
+      return;
+    }
     const target = Math.min(container.clientWidth - 8, MAX_PAGE_WIDTH);
     viewer.currentScale = target / (pageWidthRef.current * PDF_TO_CSS);
-  }, []);
+  }, [book]);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,6 +110,7 @@ export default function Reader({ book }: { book: Book }) {
         textLayerMode: 0, // scanned pages: no text to select
         supportsPinchToZoom: true,
       });
+      if (wantSingle()) viewer.scrollMode = ONE_PAGE;
       linkService.setViewer(viewer);
       viewerRef.current = viewer;
 
@@ -96,7 +121,15 @@ export default function Reader({ book }: { book: Book }) {
         savePage(book.id, start); // "pagechanging" doesn't fire when the book opens on page 1
         setStatus("ready");
       });
+      // Unseen pages are sized like page 1; once a page's real size is in, fit it again.
+      // Same scale = no-op in pdf.js; a pinch-zoom leaves "page-fit" and is kept.
+      eventBus.on("pagerendered", () => {
+        if (viewer.scrollMode === ONE_PAGE && viewer.currentScaleValue === "page-fit") viewer.currentScaleValue = "page-fit";
+      });
+      let last = start;
       eventBus.on("pagechanging", ({ pageNumber }: { pageNumber: number }) => {
+        if (pageNumber !== last) container.dataset.turn = pageNumber > last ? "fwd" : "back"; // Part B trial: which way the page slides in
+        last = pageNumber;
         setPage(pageNumber);
         setPageInput(String(pageNumber));
         savePage(book.id, pageNumber);
@@ -197,6 +230,32 @@ export default function Reader({ book }: { book: Book }) {
     const x = (e.clientX - rect.left) / rect.width;
     if (x < 0.25) viewer.nextPage();
     else if (x > 0.75) viewer.previousPage();
+  };
+
+  // One-page mode: drag right to go forward (right-to-left), left to go back.
+  const onTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    const start = swipeRef.current;
+    swipeRef.current = null;
+    const viewer = viewerRef.current;
+    const el = e.currentTarget;
+    if (!start || !viewer || !single || e.touches.length) return;
+    if (el.scrollWidth > el.clientWidth + 1) return; // zoomed in: the drag pans the page
+    const dx = e.changedTouches[0].clientX - start.x;
+    const dy = e.changedTouches[0].clientY - start.y;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < 2 * Math.abs(dy)) return;
+    if (dx > 0) viewer.nextPage();
+    else viewer.previousPage();
+  };
+
+  const toggleSingle = () => {
+    const on = !single;
+    setSingle(on);
+    saveSingle(on);
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    viewer.scrollMode = on ? ONE_PAGE : SCROLL;
+    fitRef.current = true;
+    fit();
   };
 
   const goTo = (n: number) => {
@@ -310,6 +369,20 @@ export default function Reader({ book }: { book: Book }) {
             />
           </svg>
         </button>
+        <button type="button" onClick={toggleSingle} aria-label="One page at a time" aria-pressed={single}>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <rect
+              x="6"
+              y="3"
+              width="12"
+              height="18"
+              rx="1.5"
+              fill={single ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+          </svg>
+        </button>
         <button type="button" onClick={toggleBookmark} aria-label="Bookmark this page" aria-pressed={marked}>
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
             <path
@@ -340,9 +413,16 @@ export default function Reader({ book }: { book: Book }) {
 
       <div
         ref={containerRef}
-        className={[s.pages, night && s.night, book.colourCoded && s.keepHue].filter(Boolean).join(" ")}
+        className={[s.pages, single && s.single, night && s.night, book.colourCoded && s.keepHue]
+          .filter(Boolean)
+          .join(" ")}
         tabIndex={0}
         onClick={onPagesClick}
+        onTouchStart={(e) => {
+          // a second finger means pinch, not swipe
+          swipeRef.current = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+        }}
+        onTouchEnd={onTouchEnd}
         aria-label={`${book.title} pages`}
       >
         <div className="pdfViewer" />
