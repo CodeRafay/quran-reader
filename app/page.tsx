@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { BOOKS, SPECIAL_LINKS, type Book } from "../lib/books";
+import Offline from "../components/Offline";
 import Resume from "../components/Resume";
 import SurahSearch from "../components/SurahSearch";
 import s from "./page.module.css";
@@ -39,6 +40,8 @@ function Shelf({
               <span className={s.note}>{b.note}</span>
               <Resume id={b.id} pages={b.pages} className={s.resume} />
             </Link>
+            {/* outside the link: a button can't sit inside one */}
+            <Offline file={b.file} bytes={b.bytes} title={b.title} />
           </li>
         ))}
       </ul>

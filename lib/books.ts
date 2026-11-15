@@ -9,6 +9,7 @@ export type Book = {
   file: string;
   cover: string;
   pages: number;
+  bytes: number; // exact PDF size: shown on the Download button and used to check a download arrived whole
   toc?: TocEntry[]; // only for books whose PDF has no bookmarks
   juz?: TocEntry[]; // start of each juz (para), merged into the contents list
   colourCoded?: boolean; // colours carry meaning: night mode must keep their hue
@@ -62,13 +63,14 @@ const SPECIAL: [number, string, number, number][] = [
 const special = (col: 2 | 3): Special[] =>
   SPECIAL.map((r) => ({ title: SURAHS[r[0] - 1][0], note: r[1], page: r[col] }));
 
-// [first surah, last surah, first PDF page of the full tafseer, pages in this manzil]
-const MANZILS: [number, number, number, number][] = [
-  [1, 4, 1, 291], [5, 9, 292, 268], [10, 16, 560, 206], [17, 25, 766, 248],
-  [26, 36, 1014, 239], [37, 49, 1253, 215], [50, 114, 1468, 325],
+// [first surah, last surah, first PDF page of the full tafseer, pages in this manzil, PDF bytes]
+const MANZILS: [number, number, number, number, number][] = [
+  [1, 4, 1, 291, 60859012], [5, 9, 292, 268, 56568441], [10, 16, 560, 206, 42899769],
+  [17, 25, 766, 248, 51155744], [26, 36, 1014, 239, 48200675], [37, 49, 1253, 215, 44322411],
+  [50, 114, 1468, 325, 64764625],
 ];
 
-const tafseer: Book[] = MANZILS.map(([from, to, start, pages], i) => {
+const tafseer: Book[] = MANZILS.map(([from, to, start, pages, bytes], i) => {
   const toc = SURAHS.slice(from - 1, to).map(([name, bookPage], j) => ({
     title: `${from + j}. ${name}`,
     page: bookPage + BOOK_TO_PDF - start + 1,
@@ -82,6 +84,7 @@ const tafseer: Book[] = MANZILS.map(([from, to, start, pages], i) => {
     file: `/pdfs/tafseer-manzil-${i + 1}.pdf`,
     cover: `/covers/tafseer-manzil-${i + 1}.webp`,
     pages,
+    bytes,
     // printed odd pages sit on the right; a manzil cut at an even PDF page shifts them to even
     evenOnRight: start % 2 === 0,
     toc,
@@ -106,6 +109,7 @@ export const BOOKS: Book[] = [
     file: "/pdfs/digital-quran.pdf",
     cover: "/covers/digital-quran.webp",
     pages: 620,
+    bytes: 16875686,
     juz: juz("Juz", [
       2, 22, 42, 62, 82, 102, 121, 142, 162, 182, 201, 222, 242, 262, 282,
       302, 322, 342, 362, 382, 402, 422, 442, 462, 482, 502, 522, 542, 562, 582,
@@ -121,6 +125,7 @@ export const BOOKS: Book[] = [
     file: "/pdfs/13-line-tajweed.pdf",
     cover: "/covers/13-line-tajweed.webp",
     pages: 850,
+    bytes: 80900693,
     // read off each page's para header; every para starts at the top of a page
     juz: juz("Para", [
       4, 31, 59, 87, 115, 143, 171, 199, 227, 255, 283, 311, 339, 367, 395,

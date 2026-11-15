@@ -1,0 +1,36 @@
+.offline {
+  margin: 0.4rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.offline button {
+  min-height: 2.25rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--gilt);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--binding);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.offline button:hover,
+.offline button:focus-visible {
+  border-color: var(--binding);
+}
+
+.offline progress {
+  flex: 1;
+  min-width: 4rem;
+  accent-color: var(--binding);
+}
+
+.error {
+  color: #9b2c2c;
+}

@@ -1,12 +1,14 @@
 // Sanity check for the catalog: node scripts/check-books.ts
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { BOOKS, SPECIAL_LINKS, findSurahs } from "../lib/books.ts";
 
 assert.equal(new Set(BOOKS.map((b) => b.id)).size, BOOKS.length, "duplicate book ids");
 for (const b of BOOKS) {
   assert.ok(existsSync(`public${b.file}`), `missing ${b.file}`);
   assert.ok(existsSync(`public${b.cover}`), `missing ${b.cover}`);
+  // a download is checked against this size, so a replaced PDF must update it
+  assert.equal(statSync(`public${b.file}`).size, b.bytes, `${b.id}: bytes is not the PDF's size`);
   if (b.juz) {
     assert.equal(b.juz.length, 30, `${b.id}: not 30 juz`);
     for (let i = 1; i < 30; i++) assert.ok(b.juz[i].page > b.juz[i - 1].page, `${b.id}: juz pages not increasing`);

@@ -7,6 +7,7 @@
     "dev": "next dev",
     "prebuild": "node scripts/copy-pdfjs.js && node scripts/check-books.ts",
     "build": "next build",
+    "postbuild": "node scripts/build-sw.ts",
     "start": "npx serve out"
   },
   "dependencies": {

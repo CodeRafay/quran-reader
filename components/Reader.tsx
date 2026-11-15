@@ -469,7 +469,11 @@ export default function Reader({ book }: { book: Book }) {
             <p>Opening {book.title}…</p>
           ) : (
             <>
-              <p>This book didn’t open. Check your connection, then reload the page.</p>
+              <p>
+                {navigator.onLine
+                  ? "This book didn’t open. Check your connection, then reload the page."
+                  : "You’re offline and this book isn’t downloaded. Download it from the library when you’re back online."}
+              </p>
               <button type="button" onClick={() => location.reload()}>
                 Reload
               </button>
