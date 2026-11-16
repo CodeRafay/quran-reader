@@ -28,6 +28,25 @@
   color: #c9d3cb;
 }
 
+.continue {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  margin-top: 1rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--gilt);
+  border-radius: 6px;
+  color: var(--gilt-soft);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.continue:hover,
+.continue:focus-visible {
+  border-color: var(--gilt-soft);
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .main {
   max-width: 68rem;
   margin: 0 auto;

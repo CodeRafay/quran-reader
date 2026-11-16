@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { BOOKS, SPECIAL_LINKS, type Book } from "../lib/books";
+import ContinueReading from "../components/ContinueReading";
 import Offline from "../components/Offline";
 import Resume from "../components/Resume";
 import SurahSearch from "../components/SurahSearch";
@@ -58,6 +59,7 @@ export default function Library() {
         </p>
         <h1 className={s.name}>Quran Reader</h1>
         <p className={s.lede}>Read the Quran and its Urdu tafseer page by page, on any device.</p>
+        <ContinueReading className={s.continue} />
       </header>
       <main className={s.main}>
         <section className={s.shelf} aria-labelledby="special">

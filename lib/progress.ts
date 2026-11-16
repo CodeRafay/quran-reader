@@ -18,6 +18,21 @@ export function savePage(id: string, page: number) {
   } catch {}
 }
 
+// The book opened most recently, for "Continue reading" on the library page.
+export function savedLast(): string | null {
+  try {
+    return localStorage.getItem("last");
+  } catch {
+    return null;
+  }
+}
+
+export function saveLast(id: string) {
+  try {
+    localStorage.setItem("last", id);
+  } catch {}
+}
+
 // Night mode, one setting for every book. null = never chosen.
 export function savedNight(): boolean | null {
   try {

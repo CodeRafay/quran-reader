@@ -8,6 +8,7 @@ import "pdfjs-dist/web/pdf_viewer.css";
 import type { Book, TocEntry } from "../lib/books";
 import {
   saveBookmarks,
+  saveLast,
   saveNight,
   savePage,
   saveSingle,
@@ -119,6 +120,7 @@ export default function Reader({ book }: { book: Book }) {
         fit();
         if (start > 1) viewer.currentPageNumber = start;
         savePage(book.id, start); // "pagechanging" doesn't fire when the book opens on page 1
+        saveLast(book.id); // only once it opened: a book that failed to load isn't "last"
         setStatus("ready");
       });
       // Unseen pages are sized like page 1; once a page's real size is in, fit it again.
