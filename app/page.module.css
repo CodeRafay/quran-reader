@@ -113,8 +113,8 @@
 
 .card:hover .frame,
 .card:focus-visible .frame {
-  border-color: var(--binding);
-  box-shadow: inset 0 0 0 3px var(--card), inset 0 0 0 4px var(--binding);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--card), inset 0 0 0 4px var(--accent);
 }
 
 .titleAr {
@@ -158,12 +158,12 @@
 
 .chip:hover,
 .chip:focus-visible {
-  border-color: var(--binding);
+  border-color: var(--accent);
 }
 
 .resume {
   margin-top: 0.4rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--binding);
+  color: var(--accent);
 }

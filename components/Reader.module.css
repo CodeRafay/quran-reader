@@ -240,7 +240,7 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--binding);
+  color: var(--accent);
   font-weight: 600;
   cursor: pointer;
 }
@@ -346,5 +346,21 @@
   }
   .contentsIcon {
     display: block;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .contentsHead {
+    border-bottom-color: #2a3a33;
+  }
+  .filter {
+    border-color: #2a3a33;
+    background: var(--paper);
+  }
+  .tocList button:hover {
+    background: #1d2b25;
+  }
+  .tocList button[aria-current="true"] {
+    background: #22332c;
   }
 }

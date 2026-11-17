@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light dark;
   --binding: #103a2d; /* mushaf binding green */
   --binding-deep: #0a2a20;
   --gilt: #b8913a; /* the gold of an illuminated frame */
@@ -8,8 +9,20 @@
   --ink: #17221d;
   --muted: #56655d;
   --desk: #dfe4dd; /* behind pages in the reader */
+  --accent: var(--binding); /* --binding as text/hover; it vanishes on dark backgrounds */
   --font-ui: var(--font-sans), system-ui, sans-serif;
   --font-ar: var(--font-amiri), "Amiri", "Traditional Arabic", serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0e1613;
+    --card: #16211c;
+    --ink: #e4eae5;
+    --muted: #9aaba1;
+    --desk: #0b1310;
+    --accent: var(--gilt-soft);
+  }
 }
 
 * {

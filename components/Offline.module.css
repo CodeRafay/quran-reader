@@ -15,22 +15,28 @@
   border: 1px solid var(--gilt);
   border-radius: 6px;
   background: var(--card);
-  color: var(--binding);
+  color: var(--accent);
   font-weight: 600;
   cursor: pointer;
 }
 
 .offline button:hover,
 .offline button:focus-visible {
-  border-color: var(--binding);
+  border-color: var(--accent);
 }
 
 .offline progress {
   flex: 1;
   min-width: 4rem;
-  accent-color: var(--binding);
+  accent-color: var(--accent);
 }
 
 .error {
   color: #9b2c2c;
+}
+
+@media (prefers-color-scheme: dark) {
+  .error {
+    color: #f19a9a;
+  }
 }
