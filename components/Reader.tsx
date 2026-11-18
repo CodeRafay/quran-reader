@@ -61,6 +61,7 @@ export default function Reader({ book }: { book: Book }) {
   const [pageInput, setPageInput] = useState("1");
   const [toc, setToc] = useState<TocEntry[]>(book.toc ?? []);
   const [contentsOpen, setContentsOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [filter, setFilter] = useState("");
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [night, setNight] = useState(false);
@@ -300,6 +301,21 @@ export default function Reader({ book }: { book: Book }) {
     if (name === null) return; // cancelled
     updateBookmarks([...bookmarks, { title: name.trim() || fallback, page }].sort((a, b) => a.page - b.page));
   };
+  // The address already holds ?page=N. Desktop Chrome/Edge also have navigator.share (the Windows sheet), so phones only.
+  const share = () => {
+    const url = location.href;
+    if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+      navigator.share({ title: book.title, url }).catch(() => {}); // cancelling rejects
+      return;
+    }
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => prompt("Copy this link", url)); // no https or clipboard blocked
+  };
   const jump = (n: number) => {
     goTo(n);
     setContentsOpen(false);
@@ -402,7 +418,6 @@ export default function Reader({ book }: { book: Book }) {
           onClick={() => setContentsOpen((o) => !o)}
           aria-expanded={contentsOpen}
           aria-controls="contents"
-          disabled={!entries.length && !bookmarks.length && !book.special?.length}
           aria-label="Contents"
         >
           <span className={s.contentsLabel}>Contents</span>
@@ -495,6 +510,9 @@ export default function Reader({ book }: { book: Book }) {
             onChange={(e) => setFilter(e.target.value)}
             aria-label="Find in contents"
           />
+          <button type="button" onClick={share} aria-label={copied ? "Link copied" : `Share a link to page ${page}`} aria-live="polite">
+            {copied ? "Copied" : "Share"}
+          </button>
           <button type="button" onClick={() => setContentsOpen(false)}>
             Close
           </button>
